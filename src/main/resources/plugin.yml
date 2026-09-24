@@ -15,6 +15,7 @@ permissions:
     default: op
 
 softdepend:
+  - KrakenMC
   - AxQuestBoard
   - CoinsEngine
   - ExcellentEconomy

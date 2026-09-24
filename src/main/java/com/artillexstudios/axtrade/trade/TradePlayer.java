@@ -2,6 +2,7 @@ package com.artillexstudios.axtrade.trade;
 
 import com.artillexstudios.axtrade.hooks.HookManager;
 import com.artillexstudios.axtrade.hooks.currency.CurrencyHook;
+import com.artillexstudios.axtrade.utils.KrakenUtils;
 import com.artillexstudios.axtrade.utils.NumberUtils;
 import com.artillexstudios.axtrade.utils.SoundUtils;
 import com.artillexstudios.axtrade.utils.Utils;
@@ -57,7 +58,21 @@ public class TradePlayer {
         return confirmed != null;
     }
 
+    private boolean canTradeItems() {
+        for (ItemStack item : getTradeGui().getItems(false)) {
+            if (KrakenUtils.canReceive(otherPlayer.getPlayer(), item)) continue;
+            MESSAGEUTILS.sendLang(player, "trade.level-requirement", Map.of(
+                    "%player%", otherPlayer.getPlayer().getName(),
+                    "%level%", "" + KrakenUtils.getLevelRequirement(item)
+            ));
+            return false;
+        }
+        return true;
+    }
+
     public void confirm() {
+        if (!canTradeItems()) return;
+
         for (CurrencyHook currencyHook : HookManager.getCurrency()) {
             Number minimum = (Number) currencyHook.getSettings().getOrDefault("required", 0);
             if (minimum.doubleValue() <= 0) continue;

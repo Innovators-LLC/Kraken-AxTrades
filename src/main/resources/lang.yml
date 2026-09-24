@@ -28,6 +28,7 @@ trade:
   completed: "&#CCFFEEYour trade with &#00FFDD%player% &#CCFFEEwas completed!"
   aborted: "&#CCFFEEYour trade with &#00FFDD%player% &#CCFFEEwas aborted!"
   blacklisted-item: "&#CCFFEEThis item is blacklisted!"
+  level-requirement: "&#CCFFEE%player% does not meet this item's level requirement of &f%level%&#CCFFEE."
   inventory-full: "&#CCFFEEYou can't put any more items in the gui, because your trade partner has no more empty slots."
   preview-info: "&#CCFFEEYou are opening the preview gui, this is meant for testing your configuration, clicking buttons will cause errors and might not work."
 
@@ -116,4 +117,4 @@ update-notifier: "&#AAFFCCThere is a new version of the plugin available! &#DDDD
 safety: "&#FF0000This feature has been disabled for safety reasons and updating the plugin is required, please contact the server administrators."
 
 # do not change this
-version: 9
+version: 10

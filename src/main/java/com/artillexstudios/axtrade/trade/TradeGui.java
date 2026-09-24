@@ -10,6 +10,7 @@ import com.artillexstudios.axtrade.hooks.HookManager;
 import com.artillexstudios.axtrade.hooks.currency.CurrencyHook;
 import com.artillexstudios.axtrade.safety.SafetyManager;
 import com.artillexstudios.axtrade.utils.BlacklistUtils;
+import com.artillexstudios.axtrade.utils.KrakenUtils;
 import com.artillexstudios.axtrade.utils.NumberUtils;
 import com.artillexstudios.axtrade.utils.ShulkerUtils;
 import com.artillexstudios.axtrade.utils.TaxUtils;
@@ -161,6 +162,34 @@ public class TradeGui extends GuiFrame {
         }
     }
 
+    @Nullable
+    private ItemStack getItem(InventoryClickEvent event) {
+        if (event.getClickedInventory() != null) {
+            if (event.getClick() == ClickType.SWAP_OFFHAND && event.getClickedInventory().getType() != InventoryType.PLAYER) {
+                return player.getPlayer().getInventory().getItemInOffHand();
+            }
+            if (event.getClick() == ClickType.NUMBER_KEY) {
+                // when using a number key, the game will move it from the another inventory, so use the opposite of the clicked inventory
+                Inventory inventory = event.getClickedInventory().getType() == InventoryType.PLAYER ? event.getView().getTopInventory() : event.getView().getBottomInventory();
+                return inventory.getItem(event.getHotbarButton());
+            }
+        }
+        return event.getCurrentItem();
+    }
+
+    @Nullable
+    private ItemStack getIncomingItem(InventoryClickEvent event) {
+        if (event.getClick() == ClickType.SWAP_OFFHAND || event.getClick() == ClickType.NUMBER_KEY) return getItem(event);
+        return event.getCursor();
+    }
+
+    private void sendLevelRequirementMessage(@Nullable ItemStack item) {
+        MESSAGEUTILS.sendLang(player.getPlayer(), "trade.level-requirement", Map.of(
+                "%player%", player.getOtherPlayer().getPlayer().getName(),
+                "%level%", "" + KrakenUtils.getLevelRequirement(item)
+        ));
+    }
+
     private void handleClickTop(InventoryClickEvent event) {
         if (trade.isEnded()) {
             event.setCancelled(true);
@@ -171,6 +200,13 @@ public class TradeGui extends GuiFrame {
             return;
         }
         ItemStack it = getItem(event);
+
+        ItemStack incomingItem = getIncomingItem(event);
+        if (slots.contains(event.getSlot()) && !KrakenUtils.canReceive(player.getOtherPlayer().getPlayer(), incomingItem)) {
+            event.setCancelled(true);
+            sendLevelRequirementMessage(incomingItem);
+            return;
+        }
 
         if (BlacklistUtils.isBlacklisted(it)) {
             event.setCancelled(true);
@@ -204,6 +240,12 @@ public class TradeGui extends GuiFrame {
             return;
         }
         ItemStack it = getItem(event);
+
+        if (event.isShiftClick() && event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY && !KrakenUtils.canReceive(player.getOtherPlayer().getPlayer(), it)) {
+            event.setCancelled(true);
+            sendLevelRequirementMessage(it);
+            return;
+        }
 
         if (BlacklistUtils.isBlacklisted(it)) {
             event.setCancelled(true);
@@ -247,6 +289,12 @@ public class TradeGui extends GuiFrame {
 
         if (!new HashSet<>(slots).containsAll(event.getInventorySlots())) {
             event.setCancelled(true);
+            return;
+        }
+
+        if (!KrakenUtils.canReceive(player.getOtherPlayer().getPlayer(), event.getOldCursor())) {
+            event.setCancelled(true);
+            sendLevelRequirementMessage(event.getOldCursor());
             return;
         }
 
@@ -354,21 +402,6 @@ public class TradeGui extends GuiFrame {
             }, 1);
         });
         shulkerGui.open(player.getPlayer());
-    }
-
-    @Nullable
-    private ItemStack getItem(InventoryClickEvent event) {
-        if (event.getClickedInventory() != null) {
-            if (event.getClick() == ClickType.SWAP_OFFHAND && event.getClickedInventory().getType() != InventoryType.PLAYER) {
-                return player.getPlayer().getInventory().getItemInOffHand();
-            }
-            if (event.getClick() == ClickType.NUMBER_KEY) {
-                // when using a number key, the game will move it from the another inventory, so use the opposite of the clicked inventory
-                Inventory inventory = event.getClickedInventory().getType() == InventoryType.PLAYER ? event.getView().getTopInventory() : event.getView().getBottomInventory();
-                return inventory.getItem(event.getHotbarButton());
-            }
-        }
-        return event.getCurrentItem();
     }
 
     public List<ItemStack> getItems(boolean includeAir) {
