@@ -6,7 +6,6 @@ import com.artillexstudios.axapi.utils.StringUtils;
 import com.artillexstudios.axtrade.hooks.currency.AxHoesHook;
 import com.artillexstudios.axtrade.hooks.currency.AxQuestBoardHook;
 import com.artillexstudios.axtrade.hooks.currency.BeastTokensHook;
-import com.artillexstudios.axtrade.hooks.currency.CoinsEngineHook;
 import com.artillexstudios.axtrade.hooks.currency.CurrencyHook;
 import com.artillexstudios.axtrade.hooks.currency.EcoBitsHook;
 import com.artillexstudios.axtrade.hooks.currency.ExcellentEconomyHook;
@@ -73,13 +72,6 @@ public class HookManager {
                     currency.add(new ExcellentEconomyHook(curr));
                 }
                 Bukkit.getConsoleSender().sendMessage(StringUtils.formatToString("&#33FF33[AxTrade] Hooked into ExcellentEconomy!"));
-            }
-        } else {
-            if (HOOKS.getBoolean("currencies.CoinsEngine.register", true) && Bukkit.getPluginManager().getPlugin("CoinsEngine") != null) {
-                for (Map<Object, Object> curr : HOOKS.getMapList("currencies.CoinsEngine.enabled")) {
-                    currency.add(new CoinsEngineHook(curr));
-                }
-                Bukkit.getConsoleSender().sendMessage(StringUtils.formatToString("&#33FF33[AxTrade] Hooked into CoinsEngine!"));
             }
         }
 

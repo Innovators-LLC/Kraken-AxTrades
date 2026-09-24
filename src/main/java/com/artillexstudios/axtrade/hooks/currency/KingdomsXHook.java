@@ -1,8 +1,6 @@
 package com.artillexstudios.axtrade.hooks.currency;
 
 import org.jetbrains.annotations.NotNull;
-import org.kingdoms.constants.player.KingdomPlayer;
-
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -10,6 +8,34 @@ import java.util.concurrent.CompletableFuture;
 import static com.artillexstudios.axtrade.AxTrade.HOOKS;
 
 public class KingdomsXHook implements CurrencyHook {
+
+    private Object getKingdom(UUID player) {
+        try {
+            Class<?> kingdomPlayer = Class.forName("org.kingdoms.constants.player.KingdomPlayer");
+            Object data = kingdomPlayer.getMethod("getKingdomPlayer", UUID.class).invoke(null, player);
+            return data.getClass().getMethod("getKingdom").invoke(data);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private double getResourcePoints(Object kingdom) {
+        try {
+            Object points = kingdom.getClass().getMethod("getResourcePoints").invoke(kingdom);
+            return points instanceof Number ? ((Number) points).doubleValue() : 0;
+        } catch (Exception ex) {
+            return 0;
+        }
+    }
+
+    private boolean addResourcePoints(Object kingdom, long amount) {
+        try {
+            kingdom.getClass().getMethod("addResourcePoints", long.class).invoke(kingdom, amount);
+            return true;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
 
     @Override
     public void setup() {
@@ -42,22 +68,20 @@ public class KingdomsXHook implements CurrencyHook {
 
     @Override
     public double getBalance(@NotNull UUID player) {
-        final KingdomPlayer kingdomPlayer = KingdomPlayer.getKingdomPlayer(player);
-        if (kingdomPlayer.getKingdom() == null) return 0.0D;
-        return kingdomPlayer.getKingdom().getResourcePoints();
+        Object kingdom = getKingdom(player);
+        if (kingdom == null) return 0.0D;
+        return getResourcePoints(kingdom);
     }
 
     @Override
     public CompletableFuture<Boolean> giveBalance(@NotNull UUID player, double amount) {
-        final KingdomPlayer kingdomPlayer = KingdomPlayer.getKingdomPlayer(player);
-        kingdomPlayer.getKingdom().addResourcePoints((long) amount);
-        return CompletableFuture.completedFuture(true);
+        Object kingdom = getKingdom(player);
+        return CompletableFuture.completedFuture(kingdom != null && addResourcePoints(kingdom, (long) amount));
     }
 
     @Override
     public CompletableFuture<Boolean> takeBalance(@NotNull UUID player, double amount) {
-        final KingdomPlayer kingdomPlayer = KingdomPlayer.getKingdomPlayer(player);
-        kingdomPlayer.getKingdom().addResourcePoints((long) (amount * -1));
-        return CompletableFuture.completedFuture(true);
+        Object kingdom = getKingdom(player);
+        return CompletableFuture.completedFuture(kingdom != null && addResourcePoints(kingdom, (long) (amount * -1)));
     }
 }
